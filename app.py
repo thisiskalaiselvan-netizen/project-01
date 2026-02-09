@@ -1,18 +1,26 @@
 from flask import Flask, render_template, request, redirect, session, url_for, send_file
-from google.cloud import storage
-from flask import redirect
 import os
 import io
+import json
+from google.cloud import storage
+from google.oauth2 import service_account
 
-app:app
+# ---------------- GCS AUTH (Railway safe) ----------------
+key_info = json.loads(os.environ["GCS_KEY"])
+
+credentials = service_account.Credentials.from_service_account_info(
+    key_info
+)
+
+client = storage.Client(credentials=credentials)
+
+# ---------------- FLASK APP ----------------
+app = Flask(__name__)
 app.secret_key = "secret123"
 
-os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "key.json"
-
-BUCKET_NAME = "kalai_project-02"   # 🔁 change only if bucket name different
+BUCKET_NAME = "kalai_project-02"
 
 def get_bucket():
-    client = storage.Client()
     return client.bucket(BUCKET_NAME)
 
 # ---------------- LOGIN ----------------
@@ -24,7 +32,6 @@ def login():
             return redirect(url_for("index"))
         else:
             return render_template("login.html", error="Invalid login")
-
     return render_template("login.html")
 
 # ---------------- LOGOUT ----------------
@@ -50,13 +57,14 @@ def upload():
         return redirect(url_for("login"))
 
     file = request.files["file"]
-    if file.filename != "":
+    if file and file.filename:
         bucket = get_bucket()
         blob = bucket.blob(file.filename)
         blob.upload_from_file(file)
 
     return redirect(url_for("index"))
-#----------- VIEW -------------
+
+# ---------------- VIEW ----------------
 @app.route("/view/<filename>")
 def view_file(filename):
     bucket = get_bucket()
@@ -64,7 +72,7 @@ def view_file(filename):
 
     url = blob.generate_signed_url(
         version="v4",
-        expiration=300,   # 5 minutes
+        expiration=300,
         method="GET"
     )
     return redirect(url)
@@ -84,5 +92,9 @@ def download(filename):
 
     return send_file(file_data, download_name=filename, as_attachment=True)
 
+# ---------------- RUN ----------------
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(
+        host="0.0.0.0",
+        port=int(os.environ.get("PORT", 8080))
+    )
