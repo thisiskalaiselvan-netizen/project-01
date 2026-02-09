@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Dashboard</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body class="uploadpage">
+<div class="topbar">
+    <div class="logo">
+        ☁ Google Cloud Storage
+    </div>
+</div>
+
+<div class="dashboard">
+
+    <div class="card1">
+        <h2 style="text-align: center;">Add New File</h2>
+        <form action="/upload" method="POST" enctype="multipart/form-data">
+        <h5 style="font-size: large;">Upload Your File :<input type="file" name="file" required></h5>
+            <button class="uploadbutton" type="submit">Upload</button>
+        </form>
+    </div>
+
+    <div class="card">
+        <h2 style="text-align: center;">Uploaded Files in Cloud</h2>
+        <ul class="file-list">
+            {% for file in files %}
+            <li>
+                {{ file }}
+                <a class="download" href="/download/{{ file }}">Download</a>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+<!-- LEFT SIDEBAR -->
+<div class="sidebar">
+    <h2>☁ GCS Project</h2>
+    <a href="#">Dashboard</a>
+    <a href="#">Files</a>
+    <a href="#">Settings</a>
+</div>
+
+<!-- LOGOUT BUTTON -->
+<a href="/logout" class="logout-btn">Logout</a>
+
+</body>
+</html>
